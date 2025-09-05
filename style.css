@@ -147,6 +147,22 @@ body {
   border-radius:4px;
   min-width:24px;
 }
+.newgame-btn {
+  margin-top: 10px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 700;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+  width: 100%;
+  transition: background .2s ease;
+}
+.newgame-btn:hover {
+  background: #4f88ff;
+}
+
 
 .restart-timer {
   text-align:center;
