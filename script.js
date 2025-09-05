@@ -171,7 +171,8 @@ function endGame(won,bucket){
   setStats(stats);
   renderStats(stats);
   openStats();
-  startRestartCountdown();
+  // show new game button
+  document.getElementById("newGameBtn").style.display = "block";
 }
 
 function renderStats(stats=getStats()){
@@ -215,23 +216,8 @@ function newGame(){
   gameOver=false;
   setMessage("");
   document.querySelectorAll(".key").forEach(k=>k.classList.remove("correct","present","absent"));
-}
-
-function startRestartCountdown(){
-  let seconds=5;
-  const timer=document.getElementById("restartTimer");
-  timer.textContent=`New game in ${seconds}…`;
-  const interval=setInterval(()=>{
-    seconds--;
-    if(seconds<=0){
-      clearInterval(interval);
-      timer.textContent="";
-      closeStats();
-      newGame();
-    }else{
-      timer.textContent=`New game in ${seconds}…`;
-    }
-  },1000);
+  // hide new game button until next end
+  document.getElementById("newGameBtn").style.display = "none";
 }
 
 window.addEventListener("load",async()=>{
@@ -241,4 +227,8 @@ window.addEventListener("load",async()=>{
   newGame();
   document.getElementById("statsBtn").addEventListener("click",()=>{renderStats();openStats();});
   document.getElementById("closeStatsBtn").addEventListener("click",closeStats);
+  document.getElementById("newGameBtn").addEventListener("click",()=>{
+    closeStats();
+    newGame();
+  });
 });
