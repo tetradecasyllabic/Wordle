@@ -17,7 +17,7 @@ body {
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   display:flex;
   flex-direction:column;
-  height:100vh; /* Use 100vh to ensure the wrap centers correctly */
+  height:100vh;
 }
 
 .topbar {
@@ -29,6 +29,8 @@ body {
 }
 .title { margin:0; font-weight:800; letter-spacing:1px; }
 .actions { display:flex; gap:8px; }
+
+/* Styling for header buttons */
 .icon-btn {
   background:#1e1f21;
   border:1px solid #2a2a2a;
@@ -36,7 +38,14 @@ body {
   border-radius:8px;
   padding:6px 10px;
   cursor:pointer;
+  font-weight: 600;
 }
+.mode-btn {
+    background: #3e3e40; /* Slightly different background for mode toggle */
+    font-size: 0.8rem;
+    padding: 6px 8px;
+}
+
 
 .wrap {
   flex:1;
@@ -124,7 +133,7 @@ body {
   border:1px solid #2a2a2a;
   border-radius:12px;
   padding:16px;
-  width:min(480px, 90%); /* Adjusted for better mobile fit */
+  width:min(480px, 90%);
 }
 .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
 .stats-grid {
@@ -139,7 +148,13 @@ body {
 
 .dist { display:flex; flex-direction:column; gap:6px; }
 .dist-row { display:flex; align-items:center; gap:8px; }
-.dist-label { width:16px; text-align:right; font-weight:700; color:var(--muted); }
+.dist-label { 
+    width:16px; 
+    text-align:right; 
+    font-weight:700; 
+    color:var(--muted); 
+    flex-shrink: 0; /* Prevent label from shrinking */
+}
 .dist-bar-wrap {
   flex:1;
   background:#0f0f10;
@@ -157,6 +172,7 @@ body {
   border-radius:4px;
   min-width:24px;
   box-sizing: border-box;
+  transition: width 0.3s ease;
 }
 .newgame-btn {
   margin-top: 10px;
