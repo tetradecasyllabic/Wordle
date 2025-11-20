@@ -1,58 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>Wordle</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="style.css" /> </head>
+    <meta charset="utf-8" />
+    <title>Wordle</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="style.css" />
+</head>
 <body>
-  <header class="topbar">
-    <h1 class="title">Wordle</h1>
-    <div class="actions">
-        <button id="modeBtn" class="icon-btn mode-btn" aria-label="Game Mode">📜 OFFICIAL</button>
-      <button id="statsBtn" class="icon-btn" aria-label="Stats">📊</button>
-    </div>
-  </header>
+    <header class="topbar">
+        <h1 class="title">Wordle</h1>
+        <div class="actions">
+            <button id="modeBtn" class="icon-btn mode-btn" aria-label="Game Mode">📜 OFFICIAL</button>
+            <button id="statsBtn" class="icon-btn" aria-label="Stats">📊</button>
+        </div>
+    </header>
 
-  <main class="wrap">
-    <div id="game-board" class="board" aria-label="Game board"></div>
-    <div id="keyboard" class="keyboard" aria-label="Keyboard"></div>
-    <p id="message" class="message" role="status" aria-live="polite"></p>
-  </main>
+    <main class="wrap">
+        <div id="game-board" class="board" aria-label="Game board"></div>
+        <div id="keyboard" class="keyboard" aria-label="Keyboard"></div>
+        <p id="message" class="message" role="status" aria-live="polite"></p>
+    </main>
 
-    <div id="statsModal" class="modal" aria-hidden="true">
-    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="statsTitle">
-      <div class="modal-header">
-        <h2 id="statsTitle">Statistics</h2>
-        <button id="closeStatsBtn" class="icon-btn" aria-label="Close">✖️</button>
-      </div>
-      <div class="stats-grid">
-        <div class="stat">
-          <div class="stat-number" id="statPlayed">0</div>
-          <div class="stat-label">Played</div>
-        </div>
-        <div class="stat">
-          <div class="stat-number" id="statWinPct">0</div>
-          <div class="stat-label">Win %</div>
-        </div>
-        <div class="stat">
-          <div class="stat-number" id="statCurrentStreak">0</div>
-          <div class="stat-label">Current Streak</div>
-        </div>
-        <div class="stat">
-          <div class="stat-number" id="statMaxStreak">0</div>
-          <div class="stat-label">Max Streak</div>
-        </div>
-      </div>
+    <div id="statsModal" class="modal" aria-hidden="true">
+        <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="statsTitle">
+            <div class="modal-header">
+                <h2 id="statsTitle">Statistics</h2>
+                <button id="closeStatsBtn" class="icon-btn" aria-label="Close">✖️</button>
+            </div>
+            <div class="stats-grid">
+                <div class="stat">
+                    <div class="stat-number" id="statPlayed">0</div>
+                    <div class="stat-label">Played</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number" id="statWinPct">0</div>
+                    <div class="stat-label">Win %</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number" id="statCurrentStreak">0</div>
+                    <div class="stat-label">Current Streak</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number" id="statMaxStreak">0</div>
+                    <div class="stat-label">Max Streak</div>
+                </div>
+            </div>
 
-      <h3 class="dist-title">Guess Distribution</h3>
-      <div id="dist" class="dist"></div>
+            <h3 class="dist-title">Guess Distribution</h3>
+            <div id="dist" class="dist"></div>
 
-      <p id="restartTimer" class="restart-timer"></p>
-      <button id="newGameBtn" class="newgame-btn" style="display: none;">New Game</button>
+            <p id="restartTimer" class="restart-timer"></p>
+            <button id="newGameBtn" class="newgame-btn" style="display: none;">New Game</button>
 
-    </div>
-  </div>
+        </div>
+    </div>
 
-  <script src="script.js"></script> </body>
+    <script src="script.js"></script>
+</body>
 </html>
