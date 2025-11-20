@@ -2,14 +2,27 @@ const BOARD_ROWS = 6;
 const WORD_LEN = 5;
 
 let validWords = new Set();
-let possibleAnswers = [];
-let secretWord = "";
+let possibleAnswers = []; // Official answers
+let allGuessableWords = []; // Combination of validWords and possibleAnswers
 
+let secretWord = "";
 let currentRow = 0;
 let currentGuess = "";
 let gameOver = false;
 
-const LS_STATS = "wordle_stats_v2";
+// Game State & Mode
+const LS_STATS = "wordle_stats_v3"; // Updated version to prevent conflicts
+let currentMode = "official"; // 'official' or 'special'
+
+// --- DOM Elements ---
+const modeBtn = document.getElementById("modeBtn");
+const statsModal = document.getElementById("statsModal");
+const closeStatsBtn = document.getElementById("closeStatsBtn");
+const newGameBtn = document.getElementById("newGameBtn");
+const statsBtn = document.getElementById("statsBtn");
+const messageEl = document.getElementById("message");
+
+// --- Stats Management ---
 
 function defaultStats() {
   return {
@@ -23,12 +36,30 @@ function defaultStats() {
 function getStats(){ return JSON.parse(localStorage.getItem(LS_STATS)) || defaultStats(); }
 function setStats(s){ localStorage.setItem(LS_STATS, JSON.stringify(s)); }
 
+// --- Initialization & Word Loading ---
+
 async function loadWords() {
-  const valid = await fetch("validwords.txt").then(r => r.text());
-  const answers = await fetch("possibleanswers.txt").then(r => r.text());
-  const clean = s => s.split(/\r?\n/).map(w => w.trim().toLowerCase()).filter(Boolean);
-  clean(valid).forEach(w => validWords.add(w));
-  possibleAnswers = clean(answers);
+  try {
+        // Fetch validwords.txt (used for all guesses and Special Mode answers)
+        const valid = await fetch("validwords.txt").then(r => r.text());
+        // Fetch possibleanswers.txt (used for Official Mode answers)
+        const answers = await fetch("possibleanswers.txt").then(r => r.text());
+        
+        const clean = s => s.split(/\r?\n/).map(w => w.trim().toLowerCase()).filter(Boolean);
+        
+        let validList = clean(valid);
+        possibleAnswers = clean(answers);
+
+        // Populate sets and combined list
+        validList.forEach(w => validWords.add(w));
+        possibleAnswers.forEach(w => validWords.add(w)); // Ensure all answers are guessable
+        
+        allGuessableWords = Array.from(validWords); // All words a user can type
+        
+  } catch (error) {
+    console.error("Failed to load word lists:", error);
+    setMessage("Error loading word lists.");
+  }
 }
 
 function setupBoard() {
@@ -81,7 +112,15 @@ function setupKeyboard(){
   });
 }
 
-function setMessage(msg){ document.getElementById("message").textContent = msg; }
+function setMessage(msg, duration = 2000){ 
+    const messageElement = document.getElementById("message");
+    messageElement.textContent = msg; 
+    if (duration > 0) {
+        setTimeout(() => {
+            messageElement.textContent = "";
+        }, duration);
+    }
+}
 
 function updateRow(){
   const rowEl = document.getElementsByClassName("row")[currentRow];
@@ -127,7 +166,8 @@ function colorKeyboard(guess, res){
     const ch = guess[i];
     const btn=document.querySelector(`.key[data-key="${ch}"]`);
     if(!btn) continue;
-    // Determine the current state ranking: correct (highest) > present > absent (lowest)
+    
+    // State ranking: correct (2) > present (1) > absent (0)
     const currentState = btn.classList.contains("correct") ? 2 : 
                          btn.classList.contains("present") ? 1 : 0;
     const newState = (res[i] === "correct") ? 2 : 
@@ -168,7 +208,7 @@ function submitGuess(){
     if(currentRow>=BOARD_ROWS){
       setTimeout(()=> endGame(false,"X"),1200);
       gameOver=true;
-      setMessage(`Word was ${secretWord.toUpperCase()} 😵`);
+      setMessage(`Word was ${secretWord.toUpperCase()} 😵`, 0); // Display until stats modal opens
     }
   }
 }
@@ -181,7 +221,7 @@ function endGame(won,bucket){
     stats.currentStreak++;
     stats.maxStreak=Math.max(stats.maxStreak,stats.currentStreak);
     stats.dist[String(bucket)]++;
-    setMessage("You win! 🎉");
+    setMessage("You win! 🎉", 0);
   }else{
     stats.currentStreak=0;
     stats.dist["X"]++;
@@ -193,6 +233,8 @@ function endGame(won,bucket){
   document.getElementById("newGameBtn").style.display = "block";
 }
 
+// --- Stats Rendering (Cleaned up) ---
+
 function renderStats(stats=getStats()){
   const winPct=stats.played?Math.round((stats.wins/stats.played)*100):0;
   document.getElementById("statPlayed").textContent=stats.played;
@@ -202,22 +244,39 @@ function renderStats(stats=getStats()){
   const distEl=document.getElementById("dist");
   distEl.innerHTML="";
   const labels=["1","2","3","4","5","6","X"];
+  
+  // Calculate max score for bar width normalization
   const max=Math.max(1,...labels.map(l=>stats.dist[l]||0));
+  
   labels.forEach(lab=>{
     const count=stats.dist[lab]||0;
+    const percentage = count/max * 100;
+
     const row=document.createElement("div");
     row.className="dist-row";
+    
+    // Label (1-6, X)
     const label=document.createElement("div");
     label.className="dist-label";
     label.textContent=lab;
+    
+    // Bar Wrap (Background container)
     const wrap=document.createElement("div");
     wrap.className="dist-bar-wrap";
+    
+    // Bar (The colored bar)
     const bar=document.createElement("div");
     bar.className="dist-bar";
-    bar.style.width=(count/max*100)+"%";
-    if (count > 0 && (count/max*100) < 10) bar.style.minWidth = "10%"; // Ensure tiny bars are visible
-    if (count === 0) bar.style.minWidth = "24px"; // Minimum space for zero count
+    bar.style.width=percentage + "%";
     bar.textContent=count;
+    
+    // Adjust minimum width for readability
+    if (count > 0 && percentage < 5) {
+        bar.style.width = '5%'; // Smallest visible bar
+    } else if (count === 0) {
+        bar.style.minWidth = "24px"; // Minimum space for zero count
+    }
+
     wrap.appendChild(bar);
     row.appendChild(label);
     row.appendChild(wrap);
@@ -226,27 +285,60 @@ function renderStats(stats=getStats()){
 }
 
 function openStats(){ document.getElementById("statsModal").classList.add("show"); }
-function closeStats(){ document.getElementById("statsModal").classList.remove("show"); }
+function closeStats(){ 
+    document.getElementById("statsModal").classList.remove("show"); 
+    // Clear message only when closing modal if game is over
+    if (gameOver) document.getElementById("message").textContent = "";
+}
+
+// --- Mode Switching ---
+
+function toggleMode() {
+    currentMode = currentMode === 'official' ? 'special' : 'official';
+    modeBtn.textContent = currentMode === 'official' ? '📜 OFFICIAL' : '✨ SPECIAL';
+    newGame();
+    setMessage(`Mode switched to ${currentMode.toUpperCase()}. New game started!`);
+}
+
+// --- New Game Logic ---
 
 function newGame(){
-  secretWord=possibleAnswers[Math.floor(Math.random()*possibleAnswers.length)];
-  setupBoard();
-  currentRow=0;
-  currentGuess="";
-  gameOver=false;
-  setMessage("");
-  document.querySelectorAll(".key").forEach(k=>k.classList.remove("correct","present","absent"));
-  // hide new game button until next end
-  document.getElementById("newGameBtn").style.display = "none";
+    const answerList = currentMode === 'official' ? possibleAnswers : Array.from(validWords);
+    
+    if (answerList.length === 0) {
+        setMessage("Word lists not loaded yet.");
+        return;
+    }
+    
+    secretWord=answerList[Math.floor(Math.random()*answerList.length)];
+    setupBoard();
+    currentRow=0;
+    currentGuess="";
+    gameOver=false;
+    setMessage("");
+    document.querySelectorAll(".key").forEach(k=>k.classList.remove("correct","present","absent"));
+    // hide new game button until next end
+    document.getElementById("newGameBtn").style.display = "none";
+    
+    // console.log("New Secret Word:", secretWord); // Debugging
 }
+
+// --- Main Listener ---
 
 window.addEventListener("load",async()=>{
   setupBoard();
   setupKeyboard();
+  
+  // Initialize mode button text before loading
+  modeBtn.textContent = currentMode === 'official' ? '📜 OFFICIAL' : '✨ SPECIAL';
+  
   await loadWords();
   newGame();
+
+  // Event Listeners
   document.getElementById("statsBtn").addEventListener("click",()=>{renderStats();openStats();});
   document.getElementById("closeStatsBtn").addEventListener("click",closeStats);
+  document.getElementById("modeBtn").addEventListener("click", toggleMode);
   document.getElementById("newGameBtn").addEventListener("click",()=>{
     closeStats();
     newGame();
