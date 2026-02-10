@@ -14,6 +14,7 @@ let secretWord = "";
 let currentGuess = "";
 let currentRow = 0;
 let gameOver = false;
+let isAnimating = false; // Flag to prevent row skipping when spamming Enter
 let maxRows = 6;
 
 const boardEl = document.getElementById("game-board");
@@ -106,7 +107,7 @@ function setupKeyboard() {
     });
 
     window.onkeydown = (e) => {
-        if (gameOver) return;
+        if (gameOver || isAnimating) return;
         const key = e.key.toUpperCase();
         if (key === "ENTER") handleKey("ENTER");
         else if (key === "BACKSPACE") handleKey("BACK");
@@ -115,7 +116,7 @@ function setupKeyboard() {
 }
 
 function handleKey(k) {
-    if (gameOver) return;
+    if (gameOver || isAnimating) return;
     if (k === "ENTER") {
         if (currentGuess.length === WORD_LEN) {
             if (validWords.has(currentGuess)) {
@@ -146,6 +147,7 @@ function updateRow() {
 }
 
 function submitGuess() {
+    isAnimating = true; // Lock input
     let resultPattern;
     const guessSnapshot = currentGuess;
 
@@ -214,12 +216,15 @@ function revealRow(pattern, guessUsed) {
     });
 
     setTimeout(() => {
+        isAnimating = false; // Unlock input
         if (pattern.every(s => s === "correct")) {
+            saveStats(true, currentRow + 1);
             endGame(true);
         } else {
             currentRow++;
             currentGuess = "";
             if (currentRow >= maxRows) {
+                saveStats(false, 0);
                 endGame(false);
             }
         }
@@ -257,6 +262,7 @@ function newGame() {
     currentRow = 0;
     currentGuess = "";
     gameOver = false;
+    isAnimating = false;
     setupBoard();
 
     document.querySelectorAll(".key").forEach(k => {
@@ -284,19 +290,87 @@ function updateWordInfo() {
     }
 }
 
-function endGame(won) {
-    gameOver = true;
-    const title = won ? "Impressive!" : "Game Over";
-    let body = "";
-    if (currentMode === MODES.ABSURDLE) {
-        body = won ? `You trapped the game into: ${absurdlePool[0]}` : `The game successfully dodged you.`;
+// Stats System
+function getStats() {
+    const key = `wordle_stats_${currentMode}`;
+    const defaults = {
+        played: 0,
+        wins: 0,
+        currentStreak: 0,
+        maxStreak: 0,
+        distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0 }
+    };
+    return JSON.parse(localStorage.getItem(key)) || defaults;
+}
+
+function saveStats(won, guesses) {
+    const stats = getStats();
+    stats.played++;
+    if (won) {
+        stats.wins++;
+        stats.currentStreak++;
+        if (stats.currentStreak > stats.maxStreak) stats.maxStreak = stats.currentStreak;
+        stats.distribution[guesses]++;
     } else {
-        body = won ? `You got it in ${currentRow + 1} guesses!` : `The word was ${secretWord}`;
+        stats.currentStreak = 0;
+    }
+    localStorage.setItem(`wordle_stats_${currentMode}`, JSON.stringify(stats));
+}
+
+function openStats() {
+    const stats = getStats();
+    const modalTitle = document.getElementById("modalTitle");
+    const modalBody = document.getElementById("modalBody");
+    
+    modalTitle.textContent = `${currentMode.toUpperCase()} STATS`;
+    
+    const winPct = stats.played === 0 ? 0 : Math.round((stats.wins / stats.played) * 100);
+    
+    // Calculate Average
+    let totalGuesses = 0;
+    for(let i=1; i<=10; i++) totalGuesses += (stats.distribution[i] * i);
+    const avgGuesses = stats.wins === 0 ? 0 : (totalGuesses / stats.wins).toFixed(1);
+
+    let html = `
+        <div style="display: flex; justify-content: space-around; margin-bottom: 20px;">
+            <div><div style="font-size: 1.5rem; font-weight: bold;">${stats.played}</div><div style="font-size: 0.7rem;">Played</div></div>
+            <div><div style="font-size: 1.5rem; font-weight: bold;">${winPct}%</div><div style="font-size: 0.7rem;">Win %</div></div>
+            <div><div style="font-size: 1.5rem; font-weight: bold;">${stats.currentStreak}</div><div style="font-size: 0.7rem;">Streak</div></div>
+            <div><div style="font-size: 1.5rem; font-weight: bold;">${stats.maxStreak}</div><div style="font-size: 0.7rem;">Max</div></div>
+        </div>
+        <div style="text-align: left; margin-top: 10px;">
+            <div style="font-weight: bold; margin-bottom: 8px;">GUESS DISTRIBUTION (Avg: ${avgGuesses})</div>
+    `;
+
+    const maxDist = Math.max(...Object.values(stats.distribution), 1);
+    const rowsToShow = currentMode === MODES.ABSURDLE ? 10 : 6;
+
+    for (let i = 1; i <= rowsToShow; i++) {
+        const count = stats.distribution[i];
+        const width = Math.max((count / maxDist) * 100, 7);
+        const color = (gameOver && !isAnimating && i === currentRow + 1) ? 'var(--correct)' : '#3a3a3c';
+        html += `
+            <div style="display: flex; align-items: center; margin-bottom: 4px; font-size: 0.8rem;">
+                <div style="width: 15px;">${i}</div>
+                <div style="flex: 1; background: #121213; margin-left: 5px;">
+                    <div style="background: ${color}; width: ${width}%; padding: 2px 5px; text-align: right; box-sizing: border-box; font-weight: bold; min-width: 20px;">
+                        ${count}
+                    </div>
+                </div>
+            </div>
+        `;
     }
 
-    document.getElementById("modalTitle").textContent = title;
-    document.getElementById("modalBody").textContent = body;
-    openStats();
+    html += `</div>`;
+    modalBody.innerHTML = html;
+    document.getElementById("statsModal").classList.add("show");
+}
+
+function endGame(won) {
+    gameOver = true;
+    const msg = won ? "Splendid!" : `The word was ${secretWord}`;
+    showMessage(msg, 0);
+    setTimeout(openStats, 1500);
 }
 
 function showMessage(msg, dur = 2000) {
@@ -304,7 +378,6 @@ function showMessage(msg, dur = 2000) {
     if (dur > 0) setTimeout(() => { if(messageEl.textContent === msg) messageEl.textContent = ""; }, dur);
 }
 
-function openStats() { document.getElementById("statsModal").classList.add("show"); }
 function closeStats() { document.getElementById("statsModal").classList.remove("show"); }
 
 init();
