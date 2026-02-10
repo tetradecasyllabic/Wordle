@@ -2,56 +2,34 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <title>Wordle</title>
+    <title>Absurdle & Wordle</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header class="topbar">
-        <h1 class="title">Wordle</h1>
+        <div>
+            <h1 class="title">WORDLE</h1>
+            <div id="word-left-info"></div>
+        </div>
         <div class="actions">
-            <button id="modeBtn" class="icon-btn mode-btn" aria-label="Game Mode">📜 OFFICIAL</button>
-            <button id="statsBtn" class="icon-btn" aria-label="Stats">📊</button>
+            <button id="modeBtn" class="icon-btn mode-btn">📜 OFFICIAL</button>
+            <button id="statsBtn" class="icon-btn">📊</button>
         </div>
     </header>
 
     <main class="wrap">
-        <div id="game-board" class="board" aria-label="Game board"></div>
-        <div id="keyboard" class="keyboard" aria-label="Keyboard"></div>
-        <p id="message" class="message" role="status" aria-live="polite"></p>
+        <div id="game-board" class="board"></div>
+        <div id="message" class="message"></div>
+        <div id="keyboard" class="keyboard"></div>
     </main>
 
-    <div id="statsModal" class="modal" aria-hidden="true">
-        <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="statsTitle">
-            <div class="modal-header">
-                <h2 id="statsTitle">Statistics</h2>
-                <button id="closeStatsBtn" class="icon-btn" aria-label="Close">✖️</button>
-            </div>
-            <div class="stats-grid">
-                <div class="stat">
-                    <div class="stat-number" id="statPlayed">0</div>
-                    <div class="stat-label">Played</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-number" id="statWinPct">0</div>
-                    <div class="stat-label">Win %</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-number" id="statCurrentStreak">0</div>
-                    <div class="stat-label">Current Streak</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-number" id="statMaxStreak">0</div>
-                    <div class="stat-label">Max Streak</div>
-                </div>
-            </div>
-
-            <h3 class="dist-title">Guess Distribution</h3>
-            <div id="dist" class="dist"></div>
-
-            <p id="restartTimer" class="restart-timer"></p>
-            <button id="newGameBtn" class="newgame-btn" style="display: none;">New Game</button>
-
+    <div id="statsModal" class="modal">
+        <div class="modal-content">
+            <h2 id="modalTitle">Statistics</h2>
+            <div id="modalBody" style="margin-bottom: 15px;"></div>
+            <button id="newGameBtn" class="newgame-btn">New Game</button>
+            <button id="closeStatsBtn" class="icon-btn" style="margin-top: 10px; width: 100%;">Close</button>
         </div>
     </div>
 
